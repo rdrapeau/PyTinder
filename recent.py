@@ -26,7 +26,7 @@ def main():
     request = requests.post(URL + '/updates', headers = headers, data = data).json()
 
     matches = list(request['matches'])
-    matches.sort(key = lambda x : x['last_activity_date'], reverse = True)
+    matches.sort(key = lambda match : match['last_activity_date'], reverse = True)
 
     for match in matches[:LIMIT]:
         if 'person' in match:
