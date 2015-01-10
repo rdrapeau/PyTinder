@@ -5,6 +5,7 @@ FB_ID = config[0]
 FB_TOKEN = config[1]
 LOGIN_CRED = {'facebook_token' : FB_TOKEN, 'facebook_id' : FB_ID}
 MIN_FRIEND_COUNT = 15
+URL = 'https://api.gotinder.com'
 
 # Like a single girl and print out her name
 def process_girl(girl, auth_token):
@@ -13,7 +14,7 @@ def process_girl(girl, auth_token):
     bio = girl['bio'].replace("\n", " ") # Remove new lines
     friend_count = girl['common_friend_count']
     headers = {'X-Auth-Token' : auth_token, 'User-Agent' : 'Tinder Android Version 3.2.0'}
-    request = requests.get('https://api.gotinder.com/like/' + tinder_id, headers = headers)
+    request = requests.get(URL + '/like/' + tinder_id, headers = headers)
 
     if friend_count > MIN_FRIEND_COUNT:
         # Friends
@@ -26,25 +27,26 @@ def process_girl(girl, auth_token):
     else:
         print name
 
+
 def main():
     # Authenticate
     headers = {'Content-Type' : 'application/json', 'User-Agent' : 'Tinder Android Version 3.2.0'}
-    request = requests.post('https://api.gotinder.com/auth', data = json.dumps(LOGIN_CRED), headers = headers)
+    request = requests.post(URL + '/auth', data = json.dumps(LOGIN_CRED), headers = headers).json()
 
-    if 'token' not in request.json():
+    if 'token' not in request:
         print 'Please Refresh FB Token'
         return
 
-    auth_token = request.json()['token']
+    auth_token = request['token']
 
     # Grab first 10
     liked = set()
     headers = {'User-Agent' : 'Tinder Android Version 3.2.0', 'Content-Type' : 'application/json', 'X-Auth-Token' : auth_token}
-    request = requests.get('https://api.gotinder.com/user/recs', headers = headers)
+    request = requests.get(URL + '/user/recs', headers = headers).json()
 
     # Continue while there are more
-    while 'results' in request.json():
-        girls = request.json()['results']
+    while 'results' in request:
+        girls = request['results']
         processes = []
 
         for girl in girls:
@@ -57,7 +59,7 @@ def main():
             process.join()
 
         # Grab next 10
-        request = requests.get('https://api.gotinder.com/user/recs', headers = headers)
+        request = requests.get(URL + '/user/recs', headers = headers).json()
 
     print len(liked), "Girls Liked"
 
